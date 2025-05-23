@@ -68,7 +68,6 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
             //Unity3d
             #include "UnityCG.cginc"
             #include "Packages/red.sim.lightvolumes/Shaders/LightVolumes.cginc"
-            #include "CustomVRCLightVolumes.cginc"
 
             //Custom (From Pema)
             #include "QuadIntrinsics.cginc"
@@ -315,7 +314,9 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
                 //get the length of the step
                 fixed stepLength = length(raymarch_rayIncrement);
 
+                #if defined(_KEEP_RAYS_ONLY_IN_VOLUME)
                 fixed3 halfVolumeSize = UNITY_ACCESS_INSTANCED_PROP(InstanceProperties, _VolumeSize) * 0.5;
+                #endif
 
                 //get our starting ray position from the camera
                 fixed3 raymarch_currentPos = _WorldSpaceCameraPos + raymarch_rayIncrement * jitter;
@@ -324,7 +325,10 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
                 #if defined(_IGNORE_ADDITIVE_VOLUMES)
                 _UdonLightVolumeAdditiveMaxOverdraw = 0;
                 #endif
-                        
+
+                #if defined (_USE_DENSITY_TEXTURE)
+                float3 densityOffset = _DensityScrolling*_Time.y;          
+                #endif
 
                 //start marching
                 for (int i = 0; i < RAYMARCH_STEPS; i++)
@@ -349,22 +353,13 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
                         //And also keep going if we haven't reached the fullest density just yet.
                         if (result.a < 1.0f)
                         {
-                            //sample the fog color (rgb = color, a = density)
+                            //sample the fog color
 
-                            //The SH coefficients textures and probe occlusion are packed into 1 atlas.
-                            //-------------------------
-                            //| ShR | ShG | ShB | Occ |
-                            //-------------------------
-
-                            // sampler state comes from SHr (all SH textures share the same sampler)
-
-                            float3 sphericalHarmonics_0;
-                            LightVolumeSHL0(raymarch_currentPos, sphericalHarmonics_0);
-
+                            float3 sphericalHarmonics_0 = LightVolumeSH_L0(raymarch_currentPos);;
                             float3 sampledColor = max(0.0, sphericalHarmonics_0 * _LightIntensity - _LightThreshold);
 
                             #if defined (_USE_DENSITY_TEXTURE)
-                            float alpha = tex3Dlod(_DensityVolumeTexture, fixed4(raymarch_currentPos*_DensityTiling+(_DensityScrolling*_Time.y), 0)).r;
+                            float alpha = tex3Dlod(_DensityVolumeTexture, fixed4(raymarch_currentPos*_DensityTiling+densityOffset, 0)).r;
                             alpha = pow(alpha,_DensityPower);
 
                             result += fixed4(sampledColor.rgb * alpha, 1.0) * stepLength; //this is slightly cheaper                 
@@ -386,7 +381,7 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
                 }
 
                 //clamp the alpha channel otherwise we get blending issues with bright spots
-                result.a = clamp(result.a, 0.0f, 1.0f);
+                result.a = saturate(result.a);
 
                 #if defined (_HALF_RESOLUTION)
                     }
