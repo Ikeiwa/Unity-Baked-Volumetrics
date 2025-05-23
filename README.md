@@ -2,7 +2,7 @@
 A graphics solution for completely baked volumetric lighting, meant to be very lightweight and inexpensive for VR *(and non-vr)*. 
 
 # VRC Light Volumes
-I added a new version of the shader for [VRC Light Volumes](https://github.com/REDSIM/VRCLightVolumes/)
+I added a new version of the shader for [VRC Light Volumes](https://github.com/REDSIM/VRCLightVolumes/), it's experimental so don't expect perfect results.
 Note: it get more expensive for each additive volume you have in your world, for now it's impossible to limit the fog to static volumes only.
 
 ## How to use in VRC:
