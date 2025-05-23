@@ -1,6 +1,18 @@
 # Unity Baked Volumetrics
 A graphics solution for completely baked volumetric lighting, meant to be very lightweight and inexpensive for VR *(and non-vr)*. 
 
+# VRC Light Volumes
+I added a new version of the shader for [VRC Light Volumes](https://github.com/REDSIM/VRCLightVolumes/)
+
+## How to use in VRC:
+- Download this UnityPackage : [DOWNLOAD](https://github.com/Ikeiwa/Unity-Baked-Volumetrics/raw/refs/heads/main/GithubContent/VRC_Volumetric_Fog.unitypackage)
+- Grab the "VolumetricFog" in "BakedVolumetrics/VRC" and place it in the scene.
+- Scale and move the volume to fit your scene or the area you want fog in
+- Done
+
+## Important! 
+You need to enable the depth texture on the camera, you can use Varneon [Depth Buffer Toolkit](https://github.com/Varneon/VUdon-DepthBufferToolkit) or if you use SDK 3.8.1 and up you can use `VRCCameraSettings.ScreenCamera.DepthTextureMode = DepthTextureMode.Depth` in a script
+
 # Results
 ![sponza1](GithubContent/sponza1.jpg)
 
