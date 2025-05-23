@@ -3,6 +3,7 @@ A graphics solution for completely baked volumetric lighting, meant to be very l
 
 # VRC Light Volumes
 I added a new version of the shader for [VRC Light Volumes](https://github.com/REDSIM/VRCLightVolumes/)
+Note: it get more expensive for each additive volume you have in your world, for now it's impossible to limit the fog to static volumes only.
 
 ## How to use in VRC:
 - Download this UnityPackage : [DOWNLOAD](https://github.com/Ikeiwa/Unity-Baked-Volumetrics/raw/refs/heads/main/GithubContent/VRC_Volumetric_Fog.unitypackage)
