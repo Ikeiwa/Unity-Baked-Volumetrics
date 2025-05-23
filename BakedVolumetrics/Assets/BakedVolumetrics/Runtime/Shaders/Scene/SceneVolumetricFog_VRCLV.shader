@@ -36,6 +36,7 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
         _LightThreshold("Lights Threshold", Float) = 0
         
         [Header(Advanced Settings)]
+        [Toggle(_IGNORE_ADDITIVE_VOLUMES)] _IgnoreAdditiveVolumes("Ignore Additive Volumes (faster)", Float) = 0
         [Enum(UnityEngine.Rendering.CullMode)] _CullMode("Cull Mode", Int) = 1 //(0 = Default | 1 = Front | 2 = Back)
         [Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend mode Source", Int) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend mode Destination", Int) = 1
@@ -67,6 +68,7 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
             //Unity3d
             #include "UnityCG.cginc"
             #include "Packages/red.sim.lightvolumes/Shaders/LightVolumes.cginc"
+            #include "CustomVRCLightVolumes.cginc"
 
             //Custom (From Pema)
             #include "QuadIntrinsics.cginc"
@@ -87,6 +89,7 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
             #pragma shader_feature_local _TERMINATE_RAYS_OUTSIDE_VOLUME
             #pragma shader_feature_local _KEEP_RAYS_ONLY_IN_VOLUME
             #pragma shader_feature_local _USE_DENSITY_TEXTURE
+            #pragma shader_feature_local _IGNORE_ADDITIVE_VOLUMES
 
             //NOTE: IF MIP QUAD OPTIMIZATION IS ENABLED
             //WE HAVE TO TARGET 5.0
@@ -316,7 +319,12 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
 
                 //get our starting ray position from the camera
                 fixed3 raymarch_currentPos = _WorldSpaceCameraPos + raymarch_rayIncrement * jitter;
-                float3 volumePos = unity_ObjectToWorld._m03_m13_m23;        
+                float3 volumePos = unity_ObjectToWorld._m03_m13_m23;
+
+                #if defined(_IGNORE_ADDITIVE_VOLUMES)
+                _UdonLightVolumeAdditiveMaxOverdraw = 0;
+                #endif
+                        
 
                 //start marching
                 for (int i = 0; i < RAYMARCH_STEPS; i++)
@@ -351,11 +359,7 @@ Shader "BakedVolumetrics/SceneVolumetricFog_VRCLV"
                             // sampler state comes from SHr (all SH textures share the same sampler)
 
                             float3 sphericalHarmonics_0;
-                            float3 sphericalHarmonics_A_R;
-                            float3 sphericalHarmonics_A_G;
-                            float3 sphericalHarmonics_A_B;
-                            LightVolumeSH(raymarch_currentPos, sphericalHarmonics_0, sphericalHarmonics_A_R,
-                                      sphericalHarmonics_A_G, sphericalHarmonics_A_B);
+                            LightVolumeSHL0(raymarch_currentPos, sphericalHarmonics_0);
 
                             float3 sampledColor = max(0.0, sphericalHarmonics_0 * _LightIntensity - _LightThreshold);
 
